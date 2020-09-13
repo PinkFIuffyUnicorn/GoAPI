@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/runtime/middleware"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gorilla/mux"
@@ -31,16 +33,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Define structure for User
+// swagger:response user
 type user struct {
 	Email    string `json:"Email"`
 	Password string `json:"Password"`
 	Name     string `json:"Name"`
 }
 
+// Define structure for Group
 type group struct {
 	Name string `json:"Name"`
 }
 
+// Connect to MongoDB
 func mongoDbConnect() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -54,6 +60,10 @@ func mongoDbConnect() *mongo.Client {
 	return client
 }
 
+// swagger:route POST /users users addUser
+// Adds a User record to the Users collection
+// responses:
+//	200: user
 func addUser(w http.ResponseWriter, r *http.Request) {
 	var user user
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -80,6 +90,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(usersResult)
 }
 
+// Gets Users with specified filters
 func getUser(w http.ResponseWriter, r *http.Request) {
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
@@ -121,10 +132,10 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(userFiltered)
 }
 
+// Update a User record
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	var user user
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	//reqBody = []byte(strings.ToLower(string(reqBody)))
 	json.Unmarshal(reqBody, &user)
 
 	userName := user.Name
@@ -171,6 +182,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	// enc.Encode("asdf")
 }
 
+// Delete a User record
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idRequest, _ := vars["id"]
@@ -192,6 +204,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(bson.M{"ID": idRequest, "deletedCount": result.DeletedCount})
 }
 
+// Add a Group record
 func addGroup(w http.ResponseWriter, r *http.Request) {
 	var group group
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -228,6 +241,7 @@ func addGroup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Delete a Group record
 func deleteGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idRequest, _ := vars["id"]
@@ -249,6 +263,7 @@ func deleteGroup(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(bson.M{"_id": idRequest, "deletedCount": result.DeletedCount})
 }
 
+// Get a Group record
 func getGroup(w http.ResponseWriter, r *http.Request) {
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
@@ -290,6 +305,7 @@ func getGroup(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(groupFiltered)
 }
 
+// Update a Group record
 func updateGroup(w http.ResponseWriter, r *http.Request) {
 	var group group
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -325,6 +341,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Define URL requests and run the app
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/users", addUser).Methods("POST")
@@ -335,6 +352,13 @@ func handleRequests() {
 	myRouter.HandleFunc("/groups", addGroup).Methods("POST")
 	myRouter.HandleFunc("/groups/{id}", updateGroup).Methods("PUT")
 	myRouter.HandleFunc("/groups/{id}", deleteGroup).Methods("DELETE")
+
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := middleware.Redoc(opts, nil)
+
+	myRouter.Handle("/docs", sh)
+	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 

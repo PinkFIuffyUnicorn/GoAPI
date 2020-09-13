@@ -5,9 +5,28 @@ info:
   description: Documentation for GO API
   title: of GO API
   version: 1.0.0
-paths: {}
+paths:
+  /users:
+    post:
+      description: Adds a User record to the Users collection
+      operationId: addUser
+      responses:
+        "200":
+          $ref: '#/responses/user'
+      tags:
+      - users
 produces:
 - application/json
+responses:
+  user:
+    description: Define structure for User
+    headers:
+      Email:
+        type: string
+      Name:
+        type: string
+      Password:
+        type: string
 schemes:
 - http
 swagger: "2.0"
