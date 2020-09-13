@@ -23,6 +23,10 @@ type user struct {
 	Name     string `json:"Name"`
 }
 
+type group struct {
+	Name string `json:"Name"`
+}
+
 func mongoDbConnect() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -63,14 +67,13 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
 
 	usersAndGroupsDatabase := client.Database("UsersAndGroups")
 	usersColletion := usersAndGroupsDatabase.Collection("Users")
 
+	params := r.URL.Query()
 	comibnedString := "{"
 
 	for param, paramValue := range params {
@@ -175,12 +178,113 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(bson.M{"ID": idRequest, "deletedCount": result.DeletedCount})
 }
 
+func addGroup(w http.ResponseWriter, r *http.Request) {
+	var group group
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	reqBody = []byte(strings.ToLower(string(reqBody)))
+	json.Unmarshal(reqBody, &group)
+
+	client := mongoDbConnect()
+	defer client.Disconnect(context.Background())
+
+	usersAndGroupsDatabase := client.Database("UsersAndGroups")
+	groupsColletion := usersAndGroupsDatabase.Collection("Groups")
+
+	cursor, err := groupsColletion.Find(context.Background(), bson.M{"Name": group.Name})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if cursor.RemainingBatchLength() == 0 {
+		groupsResult, err := groupsColletion.InsertOne(context.Background(), bson.D{
+			{Key: "Name", Value: group.Name},
+		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(groupsResult)
+	} else {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(bson.M{"response": "Group Name already exists"})
+	}
+}
+
+func deleteGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idRequest, _ := vars["id"]
+	id, _ := primitive.ObjectIDFromHex(idRequest)
+
+	client := mongoDbConnect()
+	defer client.Disconnect(context.Background())
+
+	usersAndGroupsDatabase := client.Database("UsersAndGroups")
+	groupsColletion := usersAndGroupsDatabase.Collection("Groups")
+
+	result, err := groupsColletion.DeleteOne(context.Background(), bson.M{"_id": id})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "	")
+	enc.Encode(bson.M{"ID": idRequest, "deletedCount": result.DeletedCount})
+}
+
+func getGroup(w http.ResponseWriter, r *http.Request) {
+	client := mongoDbConnect()
+	defer client.Disconnect(context.Background())
+
+	usersAndGroupsDatabase := client.Database("UsersAndGroups")
+	groupsColletion := usersAndGroupsDatabase.Collection("Groups")
+
+	params := r.URL.Query()
+	comibnedString := "{"
+
+	for param, paramValue := range params {
+		comibnedString = comibnedString + "\"" + strings.Title(strings.ToLower(param)) + "\"" + ":" + paramValue[0] + ","
+	}
+
+	if comibnedString != "{" {
+		comibnedString = strings.TrimSuffix(comibnedString, ",")
+	}
+	comibnedString = comibnedString + "}"
+
+	var bsonMap bson.M
+	err := json.Unmarshal([]byte(comibnedString), &bsonMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	filterGroups, err := groupsColletion.Find(context.Background(), bsonMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var groupFiltered []bson.M
+
+	if err = filterGroups.All(context.Background(), &groupFiltered); err != nil {
+		log.Fatal(err)
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "	")
+	enc.Encode(groupFiltered)
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/users", addUser).Methods("POST")
 	myRouter.HandleFunc("/users/{id}", updateUser).Methods("PUT")
 	myRouter.HandleFunc("/users/{id}", deleteUser).Methods("DELETE")
 	myRouter.HandleFunc("/users", getUser).Methods("GET")
+	myRouter.HandleFunc("/groups", getGroup).Methods("GET")
+	myRouter.HandleFunc("/groups", addGroup).Methods("POST")
+	myRouter.HandleFunc("/groups/{id}", deleteGroup).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
