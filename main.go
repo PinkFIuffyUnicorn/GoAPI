@@ -232,7 +232,7 @@ func deleteGroup(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "	")
-	enc.Encode(bson.M{"ID": idRequest, "deletedCount": result.DeletedCount})
+	enc.Encode(bson.M{"_id": idRequest, "deletedCount": result.DeletedCount})
 }
 
 func getGroup(w http.ResponseWriter, r *http.Request) {
@@ -276,6 +276,41 @@ func getGroup(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(groupFiltered)
 }
 
+func updateGroup(w http.ResponseWriter, r *http.Request) {
+	var group group
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &group)
+
+	groupName := group.Name
+	if groupName != "" {
+		vars := mux.Vars(r)
+		idRequest, _ := vars["id"]
+		id, _ := primitive.ObjectIDFromHex(idRequest)
+
+		client := mongoDbConnect()
+		defer client.Disconnect(context.Background())
+
+		usersAndGroupsDatabase := client.Database("UsersAndGroups")
+		groupsColletion := usersAndGroupsDatabase.Collection("Groups")
+
+		result, err := groupsColletion.UpdateOne(
+			context.Background(),
+			bson.M{"_id": id},
+			bson.D{
+				{"$set", bson.D{{"Name", group.Name}}},
+			},
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(result)
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(bson.M{"_id": idRequest, "updatedCount": result.ModifiedCount})
+	}
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/users", addUser).Methods("POST")
@@ -284,6 +319,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/users", getUser).Methods("GET")
 	myRouter.HandleFunc("/groups", getGroup).Methods("GET")
 	myRouter.HandleFunc("/groups", addGroup).Methods("POST")
+	myRouter.HandleFunc("/groups/{id}", updateGroup).Methods("PUT")
 	myRouter.HandleFunc("/groups/{id}", deleteGroup).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
