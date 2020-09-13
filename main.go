@@ -58,14 +58,18 @@ type idParameter struct {
 // Define structure for User
 // swagger:response user
 type user struct {
-	Email    string `json:"Email"`
+	// Email of the user
+	Email string `json:"Email"`
+	// Password of the user
 	Password string `json:"Password"`
-	Name     string `json:"Name"`
+	// Name of the group the user is in
+	Name string `json:"Name"`
 }
 
 // Define structure for Group
 // swagger:response group
 type group struct {
+	// Name of the group
 	Name string `json:"Name"`
 }
 

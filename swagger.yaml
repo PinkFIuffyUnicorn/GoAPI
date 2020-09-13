@@ -117,6 +117,7 @@ responses:
     description: Define structure for Group
     headers:
       Name:
+        description: Name of the group
         type: string
   updateResponse:
     description: Define response for updateResponse
@@ -130,10 +131,13 @@ responses:
     description: Define structure for User
     headers:
       Email:
+        description: Email of the user
         type: string
       Name:
+        description: Name of the group the user is in
         type: string
       Password:
+        description: Password of the user
         type: string
 schemes:
 - http
