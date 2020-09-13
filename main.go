@@ -90,7 +90,10 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(usersResult)
 }
 
-// Gets Users with specified filters
+// swagger:route GET /users users getUser
+// Returns a User record
+// responses:
+//	200: user
 func getUser(w http.ResponseWriter, r *http.Request) {
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
@@ -132,7 +135,10 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(userFiltered)
 }
 
-// Update a User record
+// swagger:route PUT /users users updateUser
+// Updates a User record in the Users collection
+// responses:
+//	200: user
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	var user user
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -163,7 +169,10 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	usersAndGroupsDatabase := client.Database("UsersAndGroups")
 	usersColletion := usersAndGroupsDatabase.Collection("Users")
 
+	counter := 0
+
 	for key, value := range dict {
+		counter++
 		result, err := usersColletion.UpdateOne(
 			context.Background(),
 			bson.M{"_id": id},
@@ -174,12 +183,11 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println(result)
 	}
 
-	// enc := json.NewEncoder(w)
-	// enc.SetIndent("", "	")
-	// enc.Encode("asdf")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "	")
+	enc.Encode(bson.M{"_id": idRequest, "FieldsUpdated": counter})
 }
 
 // Delete a User record
