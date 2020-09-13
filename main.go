@@ -33,6 +33,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Define response for deletedResponse
+// swagger:response deletedResponse
+type deletedResponse struct {
+	_id          string `json:"_id"`
+	deletedCount int64  `json:"deletedCount"`
+}
+
+// Define response for updateResponse
+// swagger:response updateResponse
+type updateResponse struct {
+	_id           string `json:"_id"`
+	FieldsUpdated int64  `json:"FieldsUpdated"`
+}
+
+// swagger:parameters updateUser deleteUser updateGroup deleteGroup
+type idParameter struct {
+	// The id of the User/Group record
+	// in: path
+	// required: true
+	ID string `json:"_id"`
+}
+
 // Define structure for User
 // swagger:response user
 type user struct {
@@ -42,6 +64,7 @@ type user struct {
 }
 
 // Define structure for Group
+// swagger:response group
 type group struct {
 	Name string `json:"Name"`
 }
@@ -135,10 +158,10 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(userFiltered)
 }
 
-// swagger:route PUT /users users updateUser
+// swagger:route PUT /users/{id} users updateUser
 // Updates a User record in the Users collection
 // responses:
-//	200: user
+//	200: updateResponse
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	var user user
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -169,10 +192,9 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	usersAndGroupsDatabase := client.Database("UsersAndGroups")
 	usersColletion := usersAndGroupsDatabase.Collection("Users")
 
-	counter := 0
+	counter := int64(0)
 
 	for key, value := range dict {
-		counter++
 		result, err := usersColletion.UpdateOne(
 			context.Background(),
 			bson.M{"_id": id},
@@ -182,6 +204,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			log.Fatal(err)
+		} else {
+			counter = counter + result.ModifiedCount
 		}
 	}
 
@@ -190,7 +214,10 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(bson.M{"_id": idRequest, "FieldsUpdated": counter})
 }
 
-// Delete a User record
+// swagger:route DELETE /users/{id} users deleteUser
+// Deletes a User record in the Users collection
+// responses:
+//	200: deletedResponse
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idRequest, _ := vars["id"]
@@ -209,10 +236,13 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "	")
-	enc.Encode(bson.M{"ID": idRequest, "deletedCount": result.DeletedCount})
+	enc.Encode(bson.M{"_id": idRequest, "deletedCount": result.DeletedCount})
 }
 
-// Add a Group record
+// swagger:route POST /groups groups addGroup
+// Adds a Group record to the Groups collection
+// responses:
+//	200: group
 func addGroup(w http.ResponseWriter, r *http.Request) {
 	var group group
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -249,7 +279,10 @@ func addGroup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Delete a Group record
+// swagger:route DELETE /groups/{id} groups deleteGroup
+// Deletes a Group record in the Groups collection
+// responses:
+//	200: deletedResponse
 func deleteGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idRequest, _ := vars["id"]
@@ -271,7 +304,10 @@ func deleteGroup(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(bson.M{"_id": idRequest, "deletedCount": result.DeletedCount})
 }
 
-// Get a Group record
+// swagger:route GET /groups groups getGroup
+// Returns a Group record
+// responses:
+//	200: group
 func getGroup(w http.ResponseWriter, r *http.Request) {
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
@@ -313,7 +349,10 @@ func getGroup(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(groupFiltered)
 }
 
-// Update a Group record
+// swagger:route PUT /groups/{id} groups updateGroup
+// Updates a Group record in the Groups collection
+// responses:
+//	200: updateResponse
 func updateGroup(w http.ResponseWriter, r *http.Request) {
 	var group group
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -345,7 +384,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "	")
-		enc.Encode(bson.M{"_id": idRequest, "updatedCount": result.ModifiedCount})
+		enc.Encode(bson.M{"_id": idRequest, "FieldsUpdated": result.ModifiedCount})
 	}
 }
 

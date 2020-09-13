@@ -6,7 +6,63 @@ info:
   title: of GO API
   version: 1.0.0
 paths:
+  /groups:
+    get:
+      description: Returns a Group record
+      operationId: getGroup
+      responses:
+        "200":
+          $ref: '#/responses/group'
+      tags:
+      - groups
+    post:
+      description: Adds a Group record to the Groups collection
+      operationId: addGroup
+      responses:
+        "200":
+          $ref: '#/responses/group'
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      description: Deletes a Group record in the Groups collection
+      operationId: deleteGroup
+      parameters:
+      - description: The id of the User/Group record
+        in: path
+        name: _id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/deletedResponse'
+      tags:
+      - groups
+    put:
+      description: Updates a Group record in the Groups collection
+      operationId: updateGroup
+      parameters:
+      - description: The id of the User/Group record
+        in: path
+        name: _id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/updateResponse'
+      tags:
+      - groups
   /users:
+    get:
+      description: Returns a User record
+      operationId: getUser
+      responses:
+        "200":
+          $ref: '#/responses/user'
+      tags:
+      - users
     post:
       description: Adds a User record to the Users collection
       operationId: addUser
@@ -15,9 +71,61 @@ paths:
           $ref: '#/responses/user'
       tags:
       - users
+  /users/{id}:
+    delete:
+      description: Deletes a User record in the Users collection
+      operationId: deleteUser
+      parameters:
+      - description: The id of the User/Group record
+        in: path
+        name: _id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/deletedResponse'
+      tags:
+      - users
+    put:
+      description: Updates a User record in the Users collection
+      operationId: updateUser
+      parameters:
+      - description: The id of the User/Group record
+        in: path
+        name: _id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/updateResponse'
+      tags:
+      - users
 produces:
 - application/json
 responses:
+  deletedResponse:
+    description: Define response for deletedResponse
+    headers:
+      _id:
+        type: string
+      deletedCount:
+        format: int64
+        type: integer
+  group:
+    description: Define structure for Group
+    headers:
+      Name:
+        type: string
+  updateResponse:
+    description: Define response for updateResponse
+    headers:
+      _id:
+        type: string
+      FieldsUpdated:
+        format: int64
+        type: integer
   user:
     description: Define structure for User
     headers:
