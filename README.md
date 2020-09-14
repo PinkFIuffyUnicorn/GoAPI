@@ -16,7 +16,7 @@
 - Have the latest version of Docker Desktop installed
 
 ## Running the API
-1. Download the source code from GitHub and unzip it to a desired location
+1. Download the source code from GitHub and unzip it to a desired location (**Important:** when you unzip the folder rename it to GoAPI, Github adds the name of the branch to the project name)
 2. In CMD (Command Line Terminal) move to where you have unzipped the repository on your local machine (to the GoAPI folder)
 3. Run the following command `docker-compose up --build` to build and set up the API in your Docker
 4. After sucessfully building and deploying the API on Docker, you can close the Terminal and run the API directly from Docker
