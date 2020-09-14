@@ -68,7 +68,7 @@ paths:
       operationId: addUser
       responses:
         "200":
-          $ref: '#/responses/user'
+          $ref: '#/responses/addResponse'
       tags:
       - users
   /users/{id}:
@@ -105,6 +105,11 @@ paths:
 produces:
 - application/json
 responses:
+  addResponse:
+    description: Define response for addResponse
+    headers:
+      InsertedID:
+        type: string
   deletedResponse:
     description: Define response for deletedResponse
     headers:

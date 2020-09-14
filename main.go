@@ -36,15 +36,21 @@ import (
 // Define response for deletedResponse
 // swagger:response deletedResponse
 type deletedResponse struct {
-	_id          string `json:"_id"`
+	ID           string `json:"_id"`
 	deletedCount int64  `json:"deletedCount"`
 }
 
 // Define response for updateResponse
 // swagger:response updateResponse
 type updateResponse struct {
-	_id           string `json:"_id"`
+	ID            string `json:"_id"`
 	FieldsUpdated int64  `json:"FieldsUpdated"`
+}
+
+// Define response for addResponse
+// swagger:response addResponse
+type addResponse struct {
+	InsertedID string `json:"InsertedID"`
 }
 
 // swagger:parameters updateUser deleteUser updateGroup deleteGroup
@@ -90,7 +96,7 @@ func mongoDbConnect() *mongo.Client {
 // swagger:route POST /users users addUser
 // Adds a User record to the Users collection
 // responses:
-//	200: user
+//	200: addResponse
 func addUser(w http.ResponseWriter, r *http.Request) {
 	var user user
 	reqBody, _ := ioutil.ReadAll(r.Body)
