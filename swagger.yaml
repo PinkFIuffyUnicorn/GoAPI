@@ -109,13 +109,16 @@ responses:
     description: Define response for addResponse
     headers:
       InsertedID:
+        description: Returned ID of the added document
         type: string
   deletedResponse:
     description: Define response for deletedResponse
     headers:
       _id:
+        description: ID for the deleted Document
         type: string
       deletedCount:
+        description: Number of documents that were deleted
         format: int64
         type: integer
   group:
@@ -133,8 +136,10 @@ responses:
     description: Define response for updateResponse
     headers:
       _id:
+        description: ID for the updated Document
         type: string
       FieldsUpdated:
+        description: Number of fields that were updated
         format: int64
         type: integer
   user:

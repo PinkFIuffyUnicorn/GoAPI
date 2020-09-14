@@ -42,20 +42,25 @@ type groupAlreadyAddedResponse struct {
 // Define response for deletedResponse
 // swagger:response deletedResponse
 type deletedResponse struct {
-	ID           string `json:"_id"`
-	deletedCount int64  `json:"deletedCount"`
+	// ID for the deleted Document
+	ID string `json:"_id"`
+	// Number of documents that were deleted
+	deletedCount int64 `json:"deletedCount"`
 }
 
 // Define response for updateResponse
 // swagger:response updateResponse
 type updateResponse struct {
-	ID            string `json:"_id"`
-	FieldsUpdated int64  `json:"FieldsUpdated"`
+	// ID for the updated Document
+	ID string `json:"_id"`
+	// Number of fields that were updated
+	FieldsUpdated int64 `json:"FieldsUpdated"`
 }
 
 // Define response for addResponse
 // swagger:response addResponse
 type addResponse struct {
+	// Returned ID of the added document
 	InsertedID string `json:"InsertedID"`
 }
 
