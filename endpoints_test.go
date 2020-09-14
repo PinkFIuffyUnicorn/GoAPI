@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -49,7 +48,6 @@ func TestAddUser(t *testing.T) {
 	}
 }
 
-// TODO
 func TestUpdateUser(t *testing.T) {
 	var updateResponse updateResponse
 	var jsonStr = []byte(`{"Email":"janez.novak@gmail.comdd","Name":"skupina1222"}`)
@@ -178,7 +176,6 @@ func TestDeleteGroup(t *testing.T) {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	log.Println(rr.Body.String())
 	reqBody, _ := ioutil.ReadAll(rr.Body)
 	json.Unmarshal(reqBody, &deletedResponse)
 
