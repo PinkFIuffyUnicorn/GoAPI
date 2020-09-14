@@ -1,5 +1,9 @@
 # GoAPI
 
+## Usage
+- Usage of the API is documented with go-swagger
+- You can access to the Swagger UI by going to this URL (after you've sucessfully ran the API on Docker): `http://localhost:8080/docs`
+
 ## Used components with versions
 - Docker 2.3.0.4(46911)
 - GO Language go1.15.1 windows/amd64
