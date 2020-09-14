@@ -1,5 +1,9 @@
 # GoAPI
 
+## Always up
+- For better convenience I've deployed the API on Google APP Engine, so it can be accessed anytime
+- You can access Swagger UI on the following URL: `https://usersandgroupsgoapi.nw.r.appspot.com/docs`
+
 ## Usage
 - Usage of the API is documented with go-swagger
 - You can access the Swagger UI by going to this URL (after sucessfully running the API on Docker): `http://localhost:8080/docs`
@@ -21,6 +25,7 @@
 - All the test cases are included in `endpoints_test.go`
 - You can run the tests by simply typing `go test -v` from your Terminal in the folder that you've downloaded and unzipped the source code (GoAPI)
 - There are 8 test cases in total (for each function 1)
+- The API does not need to run in order to run the test cases
 
 ## Improvements
 - Add Encryption/Decryption to Passwords
