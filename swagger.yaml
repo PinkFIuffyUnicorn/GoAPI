@@ -124,6 +124,11 @@ responses:
       Name:
         description: Name of the group
         type: string
+  groupAlreadyAddedResponse:
+    description: Define response for groupAlreadyAddedResponse
+    headers:
+      response:
+        type: string
   updateResponse:
     description: Define response for updateResponse
     headers:

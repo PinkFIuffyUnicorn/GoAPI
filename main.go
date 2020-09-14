@@ -33,6 +33,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Define response for groupAlreadyAddedResponse
+// swagger:response groupAlreadyAddedResponse
+type groupAlreadyAddedResponse struct {
+	Response string `json:"response"`
+}
+
 // Define response for deletedResponse
 // swagger:response deletedResponse
 type deletedResponse struct {
@@ -79,6 +85,75 @@ type group struct {
 	Name string `json:"Name"`
 }
 
+// // Encrypt passwords
+// func Encrypt(key, data []byte) ([]byte, error) {
+// 	key, salt, err := DeriveKey(key, nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	blockCipher, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	gcm, err := cipher.NewGCM(blockCipher)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	nonce := make([]byte, gcm.NonceSize())
+// 	if _, err = rand.Read(nonce); err != nil {
+// 		return nil, err
+// 	}
+
+// 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+
+// 	ciphertext = append(ciphertext, salt...)
+
+// 	return ciphertext, nil
+// }
+
+// // Decrypt passwords
+// func Decrypt(key, data []byte) ([]byte, error) {
+// 	salt, data := data[len(data)-32:], data[:len(data)-32]
+
+// 	key, _, err := DeriveKey(key, salt)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	blockCipher, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	gcm, err := cipher.NewGCM(blockCipher)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+// 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return plaintext, nil
+// }
+
+// // Key for encryption/decryption
+// func DeriveKey(password, salt []byte) ([]byte, []byte, error) {
+// 	if salt == nil {
+// 		salt = make([]byte, 32)
+// 		if _, err := rand.Read(salt); err != nil {
+// 			return nil, nil, err
+// 		}
+// 	}
+// 	key, err := scrypt.Key(password, salt, 1048576, 8, 1, 32)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
+// 	return key, salt, nil
+// }
+
 // Connect to MongoDB
 func mongoDbConnect() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -105,6 +180,26 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 
 	client := mongoDbConnect()
 	defer client.Disconnect(context.Background())
+
+	// var (
+	// 	passwordBytes = []byte(user.Password)
+	// 	data          = []byte("mySalt123!")
+	// )
+
+	// ciphertext, err := Encrypt(passwordBytes, data)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// log.Println(hex.EncodeToString(ciphertext))
+	// log.Println(ciphertext)
+
+	// plaintext, err := Decrypt(passwordBytes, ciphertext)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// log.Println(plaintext)
 
 	usersAndGroupsDatabase := client.Database("UsersAndGroups")
 	usersColletion := usersAndGroupsDatabase.Collection("Users")
@@ -390,7 +485,6 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println(result)
 
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "	")
