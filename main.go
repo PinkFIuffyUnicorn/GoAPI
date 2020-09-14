@@ -1,4 +1,4 @@
-// Package classification of GO API
+// GoLang Users And Groups management system
 //
 // Documentation for GO API
 //
@@ -173,6 +173,27 @@ func mongoDbConnect() *mongo.Client {
 	return client
 }
 
+func checkGroup(groupName string) int {
+	client := mongoDbConnect()
+	defer client.Disconnect(context.Background())
+
+	usersAndGroupsDatabase := client.Database("UsersAndGroups")
+	groupsColletion := usersAndGroupsDatabase.Collection("Groups")
+
+	filterGroups, err := groupsColletion.Find(context.Background(), bson.M{"Name": groupName})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var groupFiltered []bson.M
+
+	if err = filterGroups.All(context.Background(), &groupFiltered); err != nil {
+		log.Fatal(err)
+	}
+
+	return len(groupFiltered)
+}
+
 // swagger:route POST /users users addUser
 // Adds a User record to the Users collection
 // responses:
@@ -183,44 +204,31 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	reqBody = []byte(strings.ToLower(string(reqBody)))
 	json.Unmarshal(reqBody, &user)
 
-	client := mongoDbConnect()
-	defer client.Disconnect(context.Background())
+	if checkForGroup := checkGroup(user.Name); checkForGroup == 1 {
+		client := mongoDbConnect()
+		defer client.Disconnect(context.Background())
 
-	// var (
-	// 	passwordBytes = []byte(user.Password)
-	// 	data          = []byte("mySalt123!")
-	// )
+		usersAndGroupsDatabase := client.Database("UsersAndGroups")
+		usersColletion := usersAndGroupsDatabase.Collection("Users")
+		usersResult, err := usersColletion.InsertOne(context.Background(), bson.D{
+			{Key: "Name", Value: user.Name},
+			{Key: "Password", Value: user.Password},
+			{Key: "Email", Value: user.Email},
+		})
 
-	// ciphertext, err := Encrypt(passwordBytes, data)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// log.Println(hex.EncodeToString(ciphertext))
-	// log.Println(ciphertext)
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(usersResult)
 
-	// plaintext, err := Decrypt(passwordBytes, ciphertext)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// log.Println(plaintext)
-
-	usersAndGroupsDatabase := client.Database("UsersAndGroups")
-	usersColletion := usersAndGroupsDatabase.Collection("Users")
-	usersResult, err := usersColletion.InsertOne(context.Background(), bson.D{
-		{Key: "Name", Value: user.Name},
-		{Key: "Password", Value: user.Password},
-		{Key: "Email", Value: user.Email},
-	})
-
-	if err != nil {
-		log.Fatal(err)
+	} else if checkForGroup == 0 {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(bson.M{"response": "No Group with that name exists"})
 	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "	")
-	enc.Encode(usersResult)
 }
 
 // swagger:route GET /users users getUser
@@ -281,47 +289,53 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	userPassword := user.Password
 	userEmail := user.Email
 
-	dict := make(map[string]string)
-	if userName != "" {
-		dict["Name"] = userName
-	}
-	if userPassword != "" {
-		dict["Password"] = userPassword
-	}
-	if userEmail != "" {
-		dict["Email"] = user.Email
-	}
-
-	vars := mux.Vars(r)
-	idRequest, _ := vars["id"]
-	id, _ := primitive.ObjectIDFromHex(idRequest)
-
-	client := mongoDbConnect()
-	defer client.Disconnect(context.Background())
-
-	usersAndGroupsDatabase := client.Database("UsersAndGroups")
-	usersColletion := usersAndGroupsDatabase.Collection("Users")
-
-	counter := int64(0)
-
-	for key, value := range dict {
-		result, err := usersColletion.UpdateOne(
-			context.Background(),
-			bson.M{"_id": id},
-			bson.D{
-				{"$set", bson.D{{key, value}}},
-			},
-		)
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			counter = counter + result.ModifiedCount
+	if checkForGroup := checkGroup(userName); checkForGroup == 1 {
+		dict := make(map[string]string)
+		if userName != "" {
+			dict["Name"] = userName
 		}
-	}
+		if userPassword != "" {
+			dict["Password"] = userPassword
+		}
+		if userEmail != "" {
+			dict["Email"] = user.Email
+		}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "	")
-	enc.Encode(bson.M{"_id": idRequest, "FieldsUpdated": counter})
+		vars := mux.Vars(r)
+		idRequest, _ := vars["id"]
+		id, _ := primitive.ObjectIDFromHex(idRequest)
+
+		client := mongoDbConnect()
+		defer client.Disconnect(context.Background())
+
+		usersAndGroupsDatabase := client.Database("UsersAndGroups")
+		usersColletion := usersAndGroupsDatabase.Collection("Users")
+
+		counter := int64(0)
+
+		for key, value := range dict {
+			result, err := usersColletion.UpdateOne(
+				context.Background(),
+				bson.M{"_id": id},
+				bson.D{
+					{"$set", bson.D{{key, value}}},
+				},
+			)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				counter = counter + result.ModifiedCount
+			}
+		}
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(bson.M{"_id": idRequest, "FieldsUpdated": counter})
+	} else if checkForGroup == 0 {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "	")
+		enc.Encode(bson.M{"response": "No Group with that name exists"})
+	}
 }
 
 // swagger:route DELETE /users/{id} users deleteUser
