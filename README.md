@@ -1,5 +1,5 @@
 # GoAPI
 
 ## Improvements
-- Item1
-- Item2
+- Add Encryption/Decryption to Passwords
+- Move some functions in other classes for better readability
