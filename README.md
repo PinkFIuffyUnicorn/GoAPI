@@ -14,6 +14,7 @@
 
 ## Prerequisites
 - Have the latest version of Docker Desktop installed
+- For running the test cases you need to have go installed on your machine
 
 ## Running the API
 1. Download the source code from GitHub and unzip it to a desired location (**Important:** when you unzip the folder rename it to GoAPI, Github adds the name of the branch to the project name)
