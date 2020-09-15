@@ -50,7 +50,7 @@ func TestAddUser(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	var updateResponse updateResponse
-	var jsonStr = []byte(`{"Email":"janez.novak@gmail.comdd","Name":"skupina1222"}`)
+	var jsonStr = []byte(`{"Email":"janez.novak@gmail.comdd","Name":"skupina1"}`)
 
 	req, err := http.NewRequest("PUT", "/users", bytes.NewBuffer(jsonStr))
 	if err != nil {
