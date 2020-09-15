@@ -30,5 +30,5 @@
 
 ## Improvements
 - Add Encryption/Decryption to Passwords
-- Move some functions in other classes for better code readability
+- Move some functions in other packages for better code readability
 - Write more in depth test cases
